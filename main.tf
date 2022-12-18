@@ -29,7 +29,7 @@ resource "azurerm_network_security_group" "trace" {
 }
 
 
-resource "azurerm_resource_group" "rg" {
+resource "azurerm_resource_group" "trace" {
   name     = "trace-resource-group"
   location = "East US"
 }
