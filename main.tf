@@ -31,10 +31,6 @@ resource "azurerm_subnet" "hub" {
   resource_group_name = azurerm_resource_group.trace.name
   virtual_network_name = azurerm_virtual_network.trace["hub"].name
   address_prefixes = [each.value]
-
-  tags = {
-    environment = "Trace-AZ-Lab"
-  }
 }
 
 resource "azurerm_subnet" "spoke" {
