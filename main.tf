@@ -58,7 +58,7 @@ resource "azurerm_subnet" "hub" {
   address_prefixes = [each.value]
 }
 
-resource "azurerm_route_table" "outside" {
+resource "azurerm_route_table" "hub_outside" {
   name                          = "hub_outside_rt"
   location                      = azurerm_resource_group.trace.location
   resource_group_name           = azurerm_resource_group.trace.name
@@ -75,7 +75,7 @@ resource "azurerm_route_table" "outside" {
   }
 }
 
-resource "azurerm_route_table" "inside" {
+resource "azurerm_route_table" "hub_inside" {
   name                = "hub_inside_rt"
   location            = azurerm_resource_group.trace.location
   resource_group_name = azurerm_resource_group.trace.name
@@ -84,13 +84,13 @@ resource "azurerm_route_table" "inside" {
   }
 }
 
-resource "azurerm_route" "spokes" {
+resource "azurerm_route" "hub_inside_internet" {
   for_each = {for k, v in azurerm_virtual_network.trace : k => v.address_space if k != "hub"}
-  name                = "route_to_${each.key}"
+  name                = "route_to_internet"
   resource_group_name = azurerm_resource_group.trace.name
-  route_table_name    = azurerm_route_table.inside.name
-  address_prefix      = element(each.value,0)
-  next_hop_type       = "VnetLocal"
+  route_table_name    = azurerm_route_table.hub_inside.name
+  address_prefix      = "0.0.0.0/0"
+  next_hop_type       = "Internet"
 }
 
 # creates a spoke subnet for each entry in var.subnet_params and assigns to vnet listed in "vnet" argument
@@ -101,3 +101,30 @@ resource "azurerm_subnet" "spoke" {
   virtual_network_name = azurerm_virtual_network.trace["${each.value.vnet}"].name
   address_prefixes     = [each.value.cidr]
 }
+
+resource "azurerm_route_table" "spokes" {
+  for_each = {for k, v in azurerm_virtual_network.trace : k => v if k != "hub"}
+  name                          = "${each.key}_main_rt"
+  location                      = azurerm_resource_group.trace.location
+  resource_group_name           = azurerm_resource_group.trace.name
+  disable_bgp_route_propagation = false
+
+  route {
+    name           = "route_to_internet"
+    address_prefix = "0.0.0.0/0"
+    next_hop_type  = "Internet"
+  }
+
+  tags = {
+    environment = "Trace_AZ_Lab"
+  }
+}
+
+/* resource "azurerm_route" "hub_inside_internet" {
+  for_each = {for k, v in azurerm_virtual_network.trace : k => v.address_space if k != "hub"}
+  name                = "route_to_internet"
+  resource_group_name = azurerm_resource_group.trace.name
+  route_table_name    = azurerm_route_table.inside.name
+  address_prefix      = "0.0.0.0/0"
+  next_hop_type       = "Internet"
+} */
