@@ -17,11 +17,3 @@ terraform {
     region = "us-east-1"
   }
 }
-
-provider "azurerm" {
-  features {}
-}
-
-provider "aws" {
-  region = var.aws_region
-}
