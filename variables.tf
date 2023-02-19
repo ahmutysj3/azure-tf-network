@@ -14,3 +14,7 @@ variable "subnet_params" {
     cidr = string
   }))
 }
+
+variable "supernet" {
+  type = string
+}
