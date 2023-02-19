@@ -4,6 +4,8 @@ resource "azurerm_resource_group" "trace" {
   location = "East US"
 }
 
+
+# Builds 4 conseq. /16 vnets
 resource "azurerm_virtual_network" "trace" {
   for_each = {
     "hub" = 1
@@ -22,6 +24,7 @@ resource "azurerm_virtual_network" "trace" {
   }
 }
 
+# creates 2 x /25 subnets for inside and outside fw interfaces
 resource "azurerm_subnet" "hub" {
   for_each = {
     "outside" = cidrsubnet(element(azurerm_virtual_network.trace["hub"].address_space,0),9,0)
@@ -33,6 +36,7 @@ resource "azurerm_subnet" "hub" {
   address_prefixes = [each.value]
 }
 
+# creates a spoke subnet for each entry in var.subnet_params and assigns to vnet listed in "vnet" argument
 resource "azurerm_subnet" "spoke" {
   for_each = var.subnet_params
   name                 = "${each.key}_subnet"
