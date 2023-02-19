@@ -65,7 +65,7 @@ resource "azurerm_route_table" "outside" {
   disable_bgp_route_propagation = false
 
   route {
-    name           = "route1"
+    name           = "route_to_internet"
     address_prefix = "0.0.0.0/0"
     next_hop_type  = "Internet"
   }
@@ -79,6 +79,9 @@ resource "azurerm_route_table" "inside" {
   name                = "hub_inside_rt"
   location            = azurerm_resource_group.trace.location
   resource_group_name = azurerm_resource_group.trace.name
+  tags = {
+    environment = "Trace_AZ_Lab"
+  }
 }
 
 resource "azurerm_route" "spokes" {
