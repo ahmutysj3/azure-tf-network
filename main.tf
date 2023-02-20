@@ -261,10 +261,25 @@ resource "azurerm_network_security_rule" "db_inbound_from_app" {
   network_security_group_name = azurerm_network_security_group.spokes["db"].name
 }
 
+resource "azurerm_network_security_rule" "default_allow_all_internal_vnet" {
+  for_each                    = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
+  name                        = "default_allow_all_internal_vnet"
+  priority                    = 201
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace[each.key].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace[each.key].address_space, 0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes[each.key].name
+}
+
 resource "azurerm_network_security_rule" "default_deny_all_in" {
   for_each                    = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
   name                        = "default_deny_all_in"
-  priority                    = 1000
+  priority                    = 4096
   direction                   = "Inbound"
   access                      = "Deny"
   protocol                    = "*"
