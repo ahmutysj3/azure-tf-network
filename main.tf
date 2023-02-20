@@ -1,3 +1,4 @@
+# creates resource group for network infra
 resource "azurerm_resource_group" "network" {
   name     = "trace-network-rg"
   location = "East US"
@@ -99,10 +100,10 @@ resource "azurerm_route_table" "spokes" {
   }
 }
 
-# creates an NSG for each spoke vnet
-resource "azurerm_network_security_group" "spokes" {
-  for_each            = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
-  name                = "${each.key}_nsg"
+# creates 2 x  NSG for hub subnets
+resource "azurerm_network_security_group" "hub" {
+  for_each = azurerm_subnet.hub
+  name                = "hub_${each.key}_nsg"
   location            = azurerm_resource_group.network.location
   resource_group_name = azurerm_resource_group.network.name
 
@@ -110,6 +111,72 @@ resource "azurerm_network_security_group" "spokes" {
     environment = "Trace_AZ_Lab"
   }
 }
+
+# associates hub nsgs to appropriate hub subnet
+resource "azurerm_subnet_network_security_group_association" "hub" {
+  for_each = azurerm_subnet.hub
+  subnet_id                 = azurerm_subnet.hub[each.key].id
+  network_security_group_id = azurerm_network_security_group.hub[each.key].id
+}
+
+# allow all outbound rule for hub nsgs
+resource "azurerm_network_security_rule" "allow_all_egress" {
+  for_each = azurerm_subnet.hub
+  name                        = "hub_${each.key}_allow_all_egress"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.hub[each.key].name
+}
+
+# allow all inbound rule for hub nsgs
+resource "azurerm_network_security_rule" "allow_all_ingress" {
+  for_each = azurerm_subnet.hub
+  name                        = "hub_${each.key}_allow_all_ingress"
+  priority                    = 101
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.hub[each.key].name
+}
+
+resource "azurerm_network_security_group" "spokes" {
+  for_each            = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
+  name                = "${var.network_name}_${each.key}_nsg"
+  location            = azurerm_resource_group.network.location
+  resource_group_name = azurerm_resource_group.network.name
+
+  tags = {
+    environment = "Trace_AZ_Lab"
+  }
+}
+
+resource "azurerm_network_security_rule" "spokes_to_hub" {
+  for_each = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
+  name                        = "${each.key}_to_hub_outbound"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = element(azurerm_virtual_network.trace["hub"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes[each.key].name
+}
+
 
 # creates separate resource group for network watcher and flow logs
 resource "azurerm_resource_group" "logging" {
@@ -153,4 +220,4 @@ resource "azurerm_network_watcher_flow_log" "trace" {
     days    = 7
   }
 
-}
+} 
