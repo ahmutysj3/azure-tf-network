@@ -102,7 +102,7 @@ resource "azurerm_route_table" "spokes" {
 
 # creates 2 x  NSG for hub subnets
 resource "azurerm_network_security_group" "hub" {
-  for_each = azurerm_subnet.hub
+  for_each            = azurerm_subnet.hub
   name                = "hub_${each.key}_nsg"
   location            = azurerm_resource_group.network.location
   resource_group_name = azurerm_resource_group.network.name
@@ -114,14 +114,14 @@ resource "azurerm_network_security_group" "hub" {
 
 # associates hub nsgs to appropriate hub subnet
 resource "azurerm_subnet_network_security_group_association" "hub" {
-  for_each = azurerm_subnet.hub
+  for_each                  = azurerm_subnet.hub
   subnet_id                 = azurerm_subnet.hub[each.key].id
   network_security_group_id = azurerm_network_security_group.hub[each.key].id
 }
 
 # allow all outbound rule for hub nsgs
 resource "azurerm_network_security_rule" "allow_all_egress" {
-  for_each = azurerm_subnet.hub
+  for_each                    = azurerm_subnet.hub
   name                        = "hub_${each.key}_allow_all_egress"
   priority                    = 100
   direction                   = "Outbound"
@@ -137,7 +137,7 @@ resource "azurerm_network_security_rule" "allow_all_egress" {
 
 # allow all inbound rule for hub nsgs
 resource "azurerm_network_security_rule" "allow_all_ingress" {
-  for_each = azurerm_subnet.hub
+  for_each                    = azurerm_subnet.hub
   name                        = "hub_${each.key}_allow_all_ingress"
   priority                    = 101
   direction                   = "Inbound"
@@ -163,7 +163,7 @@ resource "azurerm_network_security_group" "spokes" {
 }
 
 resource "azurerm_network_security_rule" "spokes_to_hub" {
-  for_each = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
+  for_each                    = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
   name                        = "${each.key}_to_hub_outbound"
   priority                    = 100
   direction                   = "Outbound"
@@ -171,8 +171,8 @@ resource "azurerm_network_security_rule" "spokes_to_hub" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = "*"
-  destination_address_prefix  = element(azurerm_virtual_network.trace["hub"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace[each.key].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["hub"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes[each.key].name
 }
@@ -185,8 +185,8 @@ resource "azurerm_network_security_rule" "dmz_outbound_to_app" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = element(azurerm_virtual_network.trace["dmz"].address_space,0)
-  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace["dmz"].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes["dmz"].name
 }
@@ -199,8 +199,8 @@ resource "azurerm_network_security_rule" "dmz_inbound_from_app" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space,0)
-  destination_address_prefix  = element(azurerm_virtual_network.trace["dmz"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["dmz"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes["dmz"].name
 }
@@ -213,8 +213,8 @@ resource "azurerm_network_security_rule" "app_outbound_to_db" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space,0)
-  destination_address_prefix  = element(azurerm_virtual_network.trace["db"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["db"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes["app"].name
 }
@@ -227,8 +227,8 @@ resource "azurerm_network_security_rule" "app_inbound_from_db" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = element(azurerm_virtual_network.trace["db"].address_space,0)
-  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace["db"].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes["app"].name
 }
@@ -241,8 +241,8 @@ resource "azurerm_network_security_rule" "db_outbound_to_app" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = element(azurerm_virtual_network.trace["db"].address_space,0)
-  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace["db"].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes["db"].name
 }
@@ -255,10 +255,25 @@ resource "azurerm_network_security_rule" "db_inbound_from_app" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space,0)
-  destination_address_prefix  = element(azurerm_virtual_network.trace["db"].address_space,0)
+  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space, 0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["db"].address_space, 0)
   resource_group_name         = azurerm_resource_group.network.name
   network_security_group_name = azurerm_network_security_group.spokes["db"].name
+}
+
+resource "azurerm_network_security_rule" "default_deny_all_in" {
+  for_each                    = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
+  name                        = "default_deny_all_in"
+  priority                    = 1000
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes[each.key].name
 }
 
 # creates separate resource group for network watcher and flow logs
@@ -287,7 +302,7 @@ resource "azurerm_storage_account" "flow_logs" {
   }
 }
 
-# builds a flow log for each network security group
+/* # builds a flow log for each network security group
 resource "azurerm_network_watcher_flow_log" "trace" {
   for_each             = azurerm_network_security_group.spokes
   network_watcher_name = azurerm_network_watcher.trace.name
@@ -303,4 +318,4 @@ resource "azurerm_network_watcher_flow_log" "trace" {
     days    = 7
   }
 
-} 
+}  */
