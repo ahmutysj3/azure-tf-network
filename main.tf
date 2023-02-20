@@ -177,6 +177,89 @@ resource "azurerm_network_security_rule" "spokes_to_hub" {
   network_security_group_name = azurerm_network_security_group.spokes[each.key].name
 }
 
+resource "azurerm_network_security_rule" "dmz_outbound_to_app" {
+  name                        = "dmz_out_to_app"
+  priority                    = 101
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace["dmz"].address_space,0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes["dmz"].name
+}
+
+resource "azurerm_network_security_rule" "dmz_inbound_from_app" {
+  name                        = "dmz_in_from_app"
+  priority                    = 200
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space,0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["dmz"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes["dmz"].name
+}
+
+resource "azurerm_network_security_rule" "app_outbound_to_db" {
+  name                        = "app_out_to_db"
+  priority                    = 101
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space,0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["db"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes["app"].name
+}
+
+resource "azurerm_network_security_rule" "app_inbound_from_db" {
+  name                        = "app_in_from_db"
+  priority                    = 200
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace["db"].address_space,0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes["app"].name
+}
+
+resource "azurerm_network_security_rule" "db_outbound_to_app" {
+  name                        = "db_out_to_app"
+  priority                    = 101
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace["db"].address_space,0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["app"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes["db"].name
+}
+
+resource "azurerm_network_security_rule" "db_inbound_from_app" {
+  name                        = "db_in_from_app"
+  priority                    = 200
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = element(azurerm_virtual_network.trace["app"].address_space,0)
+  destination_address_prefix  = element(azurerm_virtual_network.trace["db"].address_space,0)
+  resource_group_name         = azurerm_resource_group.network.name
+  network_security_group_name = azurerm_network_security_group.spokes["db"].name
+}
 
 # creates separate resource group for network watcher and flow logs
 resource "azurerm_resource_group" "logging" {
