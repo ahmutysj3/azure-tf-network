@@ -1,130 +1,156 @@
-
-resource "azurerm_resource_group" "trace" {
-  name     = "trace-resource-group"
+resource "azurerm_resource_group" "network" {
+  name     = "trace-network-rg"
   location = "East US"
 }
 
 
 # Builds 4 conseq. /16 vnets
 resource "azurerm_virtual_network" "trace" {
-  for_each = {
-    "hub" = 1
-    "dmz" = 2
-    "app" = 3
-    "db" = 4
-  }
-
+  for_each            = { "hub" = 1, "dmz" = 2, "app" = 3, "db" = 4 }
   name                = "${var.network_name}_${each.key}_vnet"
-  location            = azurerm_resource_group.trace.location
-  resource_group_name = azurerm_resource_group.trace.name
-  address_space       = [cidrsubnet("${var.supernet}",8,each.value)]
+  location            = azurerm_resource_group.network.location
+  resource_group_name = azurerm_resource_group.network.name
+  address_space       = [cidrsubnet("${var.supernet}", 8, each.value)]
 
   tags = {
     environment = "Trace_AZ_Lab"
   }
 }
 
+# creates a peering between hub and each spoke vnet
 resource "azurerm_virtual_network_peering" "hub" {
-  for_each = {for k, v in azurerm_virtual_network.trace : k => v.id if k != "hub"}
-  name                      = "vnet_peering_hub_to_${each.key}"
-  resource_group_name       = azurerm_resource_group.trace.name
-  virtual_network_name      = azurerm_virtual_network.trace["hub"].name
-  remote_virtual_network_id = each.value
+  for_each                     = { for k, v in azurerm_virtual_network.trace : k => v.id if k != "hub" }
+  name                         = "vnet_peering_hub_to_${each.key}"
+  resource_group_name          = azurerm_resource_group.network.name
+  virtual_network_name         = azurerm_virtual_network.trace["hub"].name
+  remote_virtual_network_id    = each.value
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  allow_gateway_transit = false
+  allow_gateway_transit        = false
 }
 
+# creates a peering between each spoke vnet and the hub vnet
 resource "azurerm_virtual_network_peering" "spokes" {
-  for_each = {for k, v in azurerm_virtual_network.trace : k => v.name if k != "hub"}
-  name                      = "vnet_peering_${each.key}_to_hub"
-  resource_group_name       = azurerm_resource_group.trace.name
-  virtual_network_name      = each.value
-  remote_virtual_network_id = azurerm_virtual_network.trace["hub"].id
+  for_each                     = { for k, v in azurerm_virtual_network.trace : k => v.name if k != "hub" }
+  name                         = "vnet_peering_${each.key}_to_hub"
+  resource_group_name          = azurerm_resource_group.network.name
+  virtual_network_name         = each.value
+  remote_virtual_network_id    = azurerm_virtual_network.trace["hub"].id
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  allow_gateway_transit = false
+  allow_gateway_transit        = false
 }
 
 # creates 2 x /25 subnets for inside and outside fw interfaces
 resource "azurerm_subnet" "hub" {
   for_each = {
-    "outside" = cidrsubnet(element(azurerm_virtual_network.trace["hub"].address_space,0),9,0)
-    "inside" = cidrsubnet(element(azurerm_virtual_network.trace["hub"].address_space,0),9,1)
+    "outside" = cidrsubnet(element(azurerm_virtual_network.trace["hub"].address_space, 0), 9, 0)
+    "inside"  = cidrsubnet(element(azurerm_virtual_network.trace["hub"].address_space, 0), 9, 1)
   }
-  name = "hub_${each.key}_subnet"
-  resource_group_name = azurerm_resource_group.trace.name
+  name                 = "hub_${each.key}_subnet"
+  resource_group_name  = azurerm_resource_group.network.name
   virtual_network_name = azurerm_virtual_network.trace["hub"].name
-  address_prefixes = [each.value]
+  address_prefixes     = [each.value]
 }
 
+# creates a route table for the hub outside subnet
 resource "azurerm_route_table" "hub_outside" {
   name                          = "hub_outside_rt"
-  location                      = azurerm_resource_group.trace.location
-  resource_group_name           = azurerm_resource_group.trace.name
+  location                      = azurerm_resource_group.network.location
+  resource_group_name           = azurerm_resource_group.network.name
   disable_bgp_route_propagation = false
 
-  route {
-    name           = "route_to_internet"
-    address_prefix = "0.0.0.0/0"
-    next_hop_type  = "Internet"
-  }
-
   tags = {
     environment = "Trace_AZ_Lab"
   }
 }
 
+# creates a route table for the hub inside subnet
 resource "azurerm_route_table" "hub_inside" {
-  name                = "hub_inside_rt"
-  location            = azurerm_resource_group.trace.location
-  resource_group_name = azurerm_resource_group.trace.name
+  name                          = "hub_inside_rt"
+  location                      = azurerm_resource_group.network.location
+  resource_group_name           = azurerm_resource_group.network.name
+  disable_bgp_route_propagation = false
+
   tags = {
     environment = "Trace_AZ_Lab"
   }
-}
-
-resource "azurerm_route" "hub_inside_internet" {
-  for_each = {for k, v in azurerm_virtual_network.trace : k => v.address_space if k != "hub"}
-  name                = "route_to_internet"
-  resource_group_name = azurerm_resource_group.trace.name
-  route_table_name    = azurerm_route_table.hub_inside.name
-  address_prefix      = "0.0.0.0/0"
-  next_hop_type       = "Internet"
 }
 
 # creates a spoke subnet for each entry in var.subnet_params and assigns to vnet listed in "vnet" argument
 resource "azurerm_subnet" "spoke" {
-  for_each = var.subnet_params
+  for_each             = var.subnet_params
   name                 = "${each.key}_subnet"
-  resource_group_name  = azurerm_resource_group.trace.name
+  resource_group_name  = azurerm_resource_group.network.name
   virtual_network_name = azurerm_virtual_network.trace["${each.value.vnet}"].name
   address_prefixes     = [each.value.cidr]
 }
 
+# creates a route table for each spoke vnet
 resource "azurerm_route_table" "spokes" {
-  for_each = {for k, v in azurerm_virtual_network.trace : k => v if k != "hub"}
+  for_each                      = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
   name                          = "${each.key}_main_rt"
-  location                      = azurerm_resource_group.trace.location
-  resource_group_name           = azurerm_resource_group.trace.name
+  location                      = azurerm_resource_group.network.location
+  resource_group_name           = azurerm_resource_group.network.name
   disable_bgp_route_propagation = false
-
-  route {
-    name           = "route_to_internet"
-    address_prefix = "0.0.0.0/0"
-    next_hop_type  = "Internet"
-  }
 
   tags = {
     environment = "Trace_AZ_Lab"
   }
 }
 
-/* resource "azurerm_route" "hub_inside_internet" {
-  for_each = {for k, v in azurerm_virtual_network.trace : k => v.address_space if k != "hub"}
-  name                = "route_to_internet"
-  resource_group_name = azurerm_resource_group.trace.name
-  route_table_name    = azurerm_route_table.inside.name
-  address_prefix      = "0.0.0.0/0"
-  next_hop_type       = "Internet"
-} */
+# creates an NSG for each spoke vnet
+resource "azurerm_network_security_group" "spokes" {
+  for_each            = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
+  name                = "${each.key}_nsg"
+  location            = azurerm_resource_group.network.location
+  resource_group_name = azurerm_resource_group.network.name
+
+  tags = {
+    environment = "Trace_AZ_Lab"
+  }
+}
+
+# creates separate resource group for network watcher and flow logs
+resource "azurerm_resource_group" "logging" {
+  name     = "trace-logging-rg"
+  location = "East US"
+}
+
+#network watcher service
+resource "azurerm_network_watcher" "trace" {
+  name                = "${var.network_name}-net-watcher"
+  location            = azurerm_resource_group.logging.location
+  resource_group_name = azurerm_resource_group.logging.name
+}
+
+# builds storage account to store flow logs
+resource "azurerm_storage_account" "flow_logs" {
+  name                     = "flowlogstoragetrace10420"
+  resource_group_name      = azurerm_resource_group.logging.name
+  location                 = azurerm_resource_group.logging.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+
+  tags = {
+    environment = "Trace_AZ_Lab"
+  }
+}
+
+# builds a flow log for each network security group
+resource "azurerm_network_watcher_flow_log" "trace" {
+  for_each             = azurerm_network_security_group.spokes
+  network_watcher_name = azurerm_network_watcher.trace.name
+  resource_group_name  = azurerm_resource_group.logging.name
+  name                 = "trace-flow-log"
+
+  network_security_group_id = azurerm_network_security_group.spokes[each.key].id
+  storage_account_id        = azurerm_storage_account.flow_logs.id
+  enabled                   = true
+
+  retention_policy {
+    enabled = true
+    days    = 7
+  }
+
+}
