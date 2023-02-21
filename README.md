@@ -1,3 +1,10 @@
-### Microsoft Azure Cloud TF Lab ###
+# Microsoft Azure Cloud TF Lab 
 
-This repository contains my terraform lab using AZ public cloud infra. 
+## Overview 
+
+# Network Structure 
+
+- Three-Tier Design 
+> App
+> DMZ
+> DB 
