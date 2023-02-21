@@ -1,4 +1,4 @@
-/* output "vnets" {
+output "vnets" {
   value = module.network.vnets
 }
 
@@ -20,4 +20,4 @@ output "hub_route_tables" {
 
 output "spokes_route_tables" {
   value = module.network.spokes_route_tables
-} */
+} 
