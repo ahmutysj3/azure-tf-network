@@ -39,6 +39,7 @@ Use of this module/s will require setting up **ms azure provider and azure-cli**
 - azurerm_virtual_network_peering
 - azurerm_subnet
 - azurerm_route_table
+- azurerm_route_table_association
 - azurerm_network_security_group
 - azurerm_network_security_group_association
 - azurerm_network_security_rule
