@@ -56,7 +56,7 @@ resource "azurerm_subnet" "hub" {
 
 # creates a route table for each hub subnet
 resource "azurerm_route_table" "hub" {
-  for_each = azurerm_subnet.hub
+  for_each                      = azurerm_subnet.hub
   name                          = "hub_${each.key}_rt"
   location                      = azurerm_resource_group.network.location
   resource_group_name           = azurerm_resource_group.network.name
@@ -68,7 +68,7 @@ resource "azurerm_route_table" "hub" {
 }
 
 resource "azurerm_subnet_route_table_association" "hub" {
-  for_each = azurerm_subnet.hub
+  for_each       = azurerm_subnet.hub
   subnet_id      = azurerm_subnet.hub[each.key].id
   route_table_id = azurerm_route_table.hub[each.key].id
 }
@@ -83,7 +83,7 @@ resource "azurerm_subnet" "spokes" {
 }
 
 resource "azurerm_subnet_route_table_association" "spokes" {
-  for_each = var.subnet_params
+  for_each       = var.subnet_params
   subnet_id      = azurerm_subnet.spokes[each.key].id
   route_table_id = azurerm_route_table.spokes[each.value.vnet].id
 }
@@ -356,9 +356,9 @@ resource "azurerm_storage_account" "flow_logs" {
 }
 
 
- # builds a flow log for each network security group
+# builds a flow log for each network security group
 resource "azurerm_network_watcher_flow_log" "trace" {
-  for_each = {for k,v in var.subnet_params: k => v if v.flow_log == true}
+  for_each             = { for k, v in var.subnet_params : k => v if v.flow_log == true }
   network_watcher_name = azurerm_network_watcher.trace.name
   resource_group_name  = azurerm_resource_group.logging.name
   name                 = "trace-flow-log"

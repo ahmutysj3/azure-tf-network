@@ -1,11 +1,11 @@
 variable "network_name" {
-  type    = string
+  type = string
 }
 
 variable "subnet_params" {
   type = map(object({
-    vnet = string
-    cidr = string
+    vnet     = string
+    cidr     = string
     flow_log = bool
   }))
 }

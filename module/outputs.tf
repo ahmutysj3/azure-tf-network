@@ -29,9 +29,9 @@ output "subnets" {
 }
 
 output "hub_route_tables" {
-  value = {for k, v in azurerm_route_table.hub : v.name => v.id }
+  value = { for k, v in azurerm_route_table.hub : v.name => v.id }
 }
 
 output "spokes_route_tables" {
-  value = {for k, v in azurerm_route_table.spokes : v.name => v.id }
+  value = { for k, v in azurerm_route_table.spokes : v.name => v.id }
 }
