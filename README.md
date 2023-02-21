@@ -26,10 +26,11 @@ Use of this module/s will require setting up **ms azure provider and azure-cli**
 - `App VNET` can send traffic to `DMZ` or `Database VNET`s and can receive inbound traffic from either of those VNETs (always utilizing hairpin at `Hub`).
 - `Database VNET` can only receive traffic from `App VNET` and can only send traffic to `App VNET` (by way of `Hub` hairpin).
 
-### NSG Rules in lieu of defaults
+### Notes
 
 - This module uses the priority argument in NSG rules to override default rules allowing traffic from within VNET or through VNET peering.
 - Those same permissions are still in place but through manual TF plan instead of relying on Azure defaults.
+- The hub subnets will automatically be provisioned as two /25 subnets for inside/outside fw interfaces (the network requires a **Network Virtual Appliance** in the hub for routing)
 
 ## Resources Used
 

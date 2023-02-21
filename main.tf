@@ -1,17 +1,17 @@
 # creates resource group for network infra
 resource "azurerm_resource_group" "network" {
-  name     = "trace-network-rg"
+  name     = "${var.network_name}-network-rg"
   location = "East US"
 }
 
 
 # Builds 4 conseq. /16 vnets
 resource "azurerm_virtual_network" "trace" {
-  for_each            = { "hub" = 1, "dmz" = 2, "app" = 3, "db" = 4 }
+  for_each            = var.vnet_params
   name                = "${var.network_name}_${each.key}_vnet"
   location            = azurerm_resource_group.network.location
   resource_group_name = azurerm_resource_group.network.name
-  address_space       = [cidrsubnet("${var.supernet}", 8, each.value)]
+  address_space       = [each.value.cidr]
 
   tags = {
     environment = "Trace_AZ_Lab"
@@ -355,7 +355,6 @@ resource "azurerm_storage_account" "flow_logs" {
   }
 }
 
-# I'm leaving the flow logs commented out because they are really finnicky and the provider seems to fail when pushing the API half the time #
 
 # builds a flow log for each network security group
 /* resource "azurerm_network_watcher_flow_log" "trace" {

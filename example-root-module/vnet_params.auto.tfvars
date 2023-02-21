@@ -1,3 +1,18 @@
+vnet_params = {
+  hub = {
+    cidr = "10.1.0.0/16"
+  }
+  app = {
+    cidr = "10.3.0.0/16"
+  }
+  dmz = {
+    cidr = "10.2.0.0/16"
+  }
+  db = {
+    cidr = "10.4.0.0/16"
+  }
+}
+
 subnet_params = {
 
   load_balancer = {
