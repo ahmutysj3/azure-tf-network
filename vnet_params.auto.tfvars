@@ -32,4 +32,3 @@ subnet_params = {
 
 }
 
-#supernet = "10.0.0.0/8"
