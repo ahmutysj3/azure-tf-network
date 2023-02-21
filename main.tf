@@ -162,6 +162,12 @@ resource "azurerm_network_security_group" "spokes" {
   }
 }
 
+resource "azurerm_subnet_network_security_group_association" "spokes" {
+  for_each                  = var.subnet_params
+  subnet_id                 = azurerm_subnet.spoke[each.key].id
+  network_security_group_id = azurerm_network_security_group.spokes[each.value.vnet].id
+}
+
 resource "azurerm_network_security_rule" "spokes_to_hub" {
   for_each                    = { for k, v in azurerm_virtual_network.trace : k => v if k != "hub" }
   name                        = "${each.key}_to_hub_outbound"
