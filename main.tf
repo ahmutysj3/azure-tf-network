@@ -54,9 +54,10 @@ resource "azurerm_subnet" "hub" {
   address_prefixes     = [each.value]
 }
 
-# creates a route table for the hub outside subnet
-resource "azurerm_route_table" "hub_outside" {
-  name                          = "hub_outside_rt"
+# creates a route table for each hub subnet
+resource "azurerm_route_table" "hub" {
+  for_each = azurerm_subnet.hub
+  name                          = "hub_${each.key}_rt"
   location                      = azurerm_resource_group.network.location
   resource_group_name           = azurerm_resource_group.network.name
   disable_bgp_route_propagation = false
@@ -66,25 +67,25 @@ resource "azurerm_route_table" "hub_outside" {
   }
 }
 
-# creates a route table for the hub inside subnet
-resource "azurerm_route_table" "hub_inside" {
-  name                          = "hub_inside_rt"
-  location                      = azurerm_resource_group.network.location
-  resource_group_name           = azurerm_resource_group.network.name
-  disable_bgp_route_propagation = false
-
-  tags = {
-    environment = "Trace_AZ_Lab"
-  }
+resource "azurerm_subnet_route_table_association" "hub" {
+  for_each = azurerm_subnet.hub
+  subnet_id      = azurerm_subnet.hub[each.key].id
+  route_table_id = azurerm_route_table.hub[each.key].id
 }
 
 # creates a spoke subnet for each entry in var.subnet_params and assigns to vnet listed in "vnet" argument
-resource "azurerm_subnet" "spoke" {
+resource "azurerm_subnet" "spokes" {
   for_each             = var.subnet_params
   name                 = "${each.key}_subnet"
   resource_group_name  = azurerm_resource_group.network.name
   virtual_network_name = azurerm_virtual_network.trace["${each.value.vnet}"].name
   address_prefixes     = [each.value.cidr]
+}
+
+resource "azurerm_subnet_route_table_association" "spokes" {
+  for_each = azurerm_subnet.spokes
+  subnet_id      = azurerm_subnet.spokes[each.key].id
+  route_table_id = azurerm_route_table.spokes[each.key].id
 }
 
 # creates a route table for each spoke vnet
@@ -164,7 +165,7 @@ resource "azurerm_network_security_group" "spokes" {
 
 resource "azurerm_subnet_network_security_group_association" "spokes" {
   for_each                  = var.subnet_params
-  subnet_id                 = azurerm_subnet.spoke[each.key].id
+  subnet_id                 = azurerm_subnet.spokes[each.key].id
   network_security_group_id = azurerm_network_security_group.spokes[each.value.vnet].id
 }
 
