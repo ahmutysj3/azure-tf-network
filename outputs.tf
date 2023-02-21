@@ -19,7 +19,7 @@ output "hub_subnet_cidr" {
         "id" : v.id
       }
     },
-    { for k, v in azurerm_subnet.spoke :
+    { for k, v in azurerm_subnet.spokes :
       v.name => {
         "cidr" : element(v.address_prefixes, 0),
         "vnet" : v.virtual_network_name,
