@@ -10,7 +10,7 @@ output "spokes_peering" {
   value = { for k, v in azurerm_virtual_network_peering.spokes : v.name => v.id }
 }
 
-output "hub_subnet_cidr" {
+output "subnets" {
   value = merge(
     { for k, v in azurerm_subnet.hub :
       v.name => {
@@ -26,4 +26,12 @@ output "hub_subnet_cidr" {
         "id" : v.id
       }
   })
+}
+
+output "hub_route_tables" {
+  value = azurerm_route_table.hub
+}
+
+output "spokes_route_tables" {
+  value = azurerm_route_table.spokes
 }

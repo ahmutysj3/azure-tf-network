@@ -85,7 +85,7 @@ resource "azurerm_subnet" "spokes" {
 resource "azurerm_subnet_route_table_association" "spokes" {
   for_each = azurerm_subnet.spokes
   subnet_id      = azurerm_subnet.spokes[each.key].id
-  route_table_id = azurerm_route_table.spokes[each.key].id
+  route_table_id = azurerm_route_table.spokes[each.value.vnet].id
 }
 
 # creates a route table for each spoke vnet
