@@ -83,7 +83,7 @@ resource "azurerm_subnet" "spokes" {
 }
 
 resource "azurerm_subnet_route_table_association" "spokes" {
-  for_each = azurerm_subnet.spokes
+  for_each = var.subnet_params
   subnet_id      = azurerm_subnet.spokes[each.key].id
   route_table_id = azurerm_route_table.spokes[each.value.vnet].id
 }
@@ -355,8 +355,10 @@ resource "azurerm_storage_account" "flow_logs" {
   }
 }
 
+# I'm leaving the flow logs commented out because they are really finnicky and the provider seems to fail when pushing the API half the time #
+
 # builds a flow log for each network security group
-resource "azurerm_network_watcher_flow_log" "trace" {
+/* resource "azurerm_network_watcher_flow_log" "trace" {
   for_each             = azurerm_network_security_group.spokes
   network_watcher_name = azurerm_network_watcher.trace.name
   resource_group_name  = azurerm_resource_group.logging.name
@@ -371,4 +373,4 @@ resource "azurerm_network_watcher_flow_log" "trace" {
     days    = 7
   }
 
-} 
+}  */
