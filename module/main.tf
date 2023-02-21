@@ -356,14 +356,14 @@ resource "azurerm_storage_account" "flow_logs" {
 }
 
 
-/* # builds a flow log for each network security group
+ # builds a flow log for each network security group
 resource "azurerm_network_watcher_flow_log" "trace" {
-  for_each             = azurerm_network_security_group.spokes
+  for_each = {for k,v in var.subnet_params: k => v if v.flow_log == true}
   network_watcher_name = azurerm_network_watcher.trace.name
   resource_group_name  = azurerm_resource_group.logging.name
   name                 = "trace-flow-log"
 
-  network_security_group_id = azurerm_network_security_group.spokes[each.key].id
+  network_security_group_id = azurerm_network_security_group.spokes[each.value.vnet].id
   storage_account_id        = azurerm_storage_account.flow_logs.id
   enabled                   = true
 
@@ -372,4 +372,4 @@ resource "azurerm_network_watcher_flow_log" "trace" {
     days    = 7
   }
 
-}   */
+}   
