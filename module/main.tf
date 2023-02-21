@@ -356,8 +356,8 @@ resource "azurerm_storage_account" "flow_logs" {
 }
 
 
-# builds a flow log for each network security group
-/* resource "azurerm_network_watcher_flow_log" "trace" {
+/* # builds a flow log for each network security group
+resource "azurerm_network_watcher_flow_log" "trace" {
   for_each             = azurerm_network_security_group.spokes
   network_watcher_name = azurerm_network_watcher.trace.name
   resource_group_name  = azurerm_resource_group.logging.name
@@ -372,4 +372,4 @@ resource "azurerm_storage_account" "flow_logs" {
     days    = 7
   }
 
-}  */
+}   */
