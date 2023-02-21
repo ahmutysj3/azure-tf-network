@@ -42,5 +42,5 @@ Use of this module/s will require setting up **ms azure provider and azure-cli**
 
 ## Instructions
 
-- define supernet for network in the ==terraform.tfvars== file supernet variable
-- subnet parameters such as cidr and vnet assignment can be found in ==vnet_params.auto.tfvars==
+- define supernet for network in the *terraform.tfvars* file supernet variable
+- subnet parameters such as cidr and vnet assignment can be found in *vnet_params.auto.tfvars*
