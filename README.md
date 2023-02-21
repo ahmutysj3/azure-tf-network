@@ -6,6 +6,11 @@ This terraform plan builds a network in the **microsoft azure cloud**.
 
 Use of this module/s will require setting up **ms azure provider and azure-cli** (along w/credentials setup etc) before running terraform init
 
+## Instructions
+
+- define supernet for network in the *terraform.tfvars* file supernet variable
+- subnet parameters such as cidr and vnet assignment can be found in *vnet_params.auto.tfvars*
+
 ## Network Structure
 
 ### Three-Tier Design w/ Hub VNET
@@ -39,8 +44,3 @@ Use of this module/s will require setting up **ms azure provider and azure-cli**
 - azurerm_network_watcher
 - azurerm_storage_account
 - azurerm_network_watcher_flow_log
-
-## Instructions
-
-- define supernet for network in the *terraform.tfvars* file supernet variable
-- subnet parameters such as cidr and vnet assignment can be found in *vnet_params.auto.tfvars*
