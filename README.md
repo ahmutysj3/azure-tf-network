@@ -1,4 +1,4 @@
-# Microsoft Azure Cloud TF Lab
+# Azure Virtual WAN Transit Network
 
 ## Overview
 
