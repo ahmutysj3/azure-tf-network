@@ -24,3 +24,7 @@ variable "vnet_params" {
 variable "supernet" {
   type = string
 }
+
+variable "flow_logs_enable" {
+  type = string
+}

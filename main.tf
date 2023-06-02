@@ -5,6 +5,7 @@ module "network" {
   supernet = var.supernet
   vnet_params = var.vnet_params
   subnet_params = var.subnet_params
+  flow_logs_enable = var.flow_logs_enable
 }
 
 output "vnets" {
