@@ -3,6 +3,8 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "network_name" {
-  type    = string
+variable "azure_region" {
+  description = "azure location for resources"
+  type = string
+  default = "East US"
 }
