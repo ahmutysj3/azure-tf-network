@@ -62,3 +62,25 @@ resource "azurerm_subnet" "spoke_2" {
   virtual_network_name = azurerm_virtual_network.spoke_2.name
   address_prefixes     = ["10.2.0.0/24"]
 }
+
+resource "azurerm_virtual_network_peering" "spoke_1" {
+  name                      = "spoke_1_to_hub"
+  resource_group_name       = data.azurerm_resource_group.tf_lab.name
+  virtual_network_name      = azurerm_virtual_network.spoke_1.name
+  remote_virtual_network_id = azurerm_virtual_network.security.id
+
+  triggers = {
+    remote_address_space = join(",", azurerm_virtual_network.security.address_space)
+  }
+}
+
+resource "azurerm_virtual_network_peering" "spoke_2" {
+  name                      = "spoke_2_to_hub"
+  resource_group_name       = data.azurerm_resource_group.tf_lab.name
+  virtual_network_name      = azurerm_virtual_network.spoke_2.name
+  remote_virtual_network_id = azurerm_virtual_network.security.id
+
+  triggers = {
+    remote_address_space = join(",", azurerm_virtual_network.security.address_space)
+  }
+}
