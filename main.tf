@@ -23,7 +23,7 @@ resource "azurerm_subnet" "fw_internal" {
 resource "azurerm_route_table" "fw_internal" {
   name                          = "fw_internal_rt_table"
   location                      = data.azurerm_resource_group.tf_lab.location
-  resource_group_name           = data.azurerm_resource_group.tf_lab.location
+  resource_group_name           = data.azurerm_resource_group.tf_lab.name
   disable_bgp_route_propagation = false
 }
 
