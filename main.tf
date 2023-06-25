@@ -2,10 +2,6 @@ data "azurerm_resource_group" "tf_lab" {
   name = "terraform_lab"
 }
 
-output "id" {
-  value = data.azurerm_resource_group.tf_lab
-}
-
 resource "azurerm_virtual_network" "security" {
   name                = "${var.network_name}_security_vnet"
   location            = data.azurerm_resource_group.tf_lab.location
