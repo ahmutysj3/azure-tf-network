@@ -13,6 +13,20 @@ resource "azurerm_virtual_network" "security" {
   }
 }
 
+resource "azurerm_subnet" "fw_internal" {
+  name                 = "${var.network_name}_fw_internal_subnet"
+  resource_group_name  = data.azurerm_resource_group.tf_lab.name
+  virtual_network_name = azurerm_virtual_network.security.name
+  address_prefixes     = ["10.0.0.0/24"]
+}
+
+resource "azurerm_subnet" "fw_external" {
+  name                 = "${var.network_name}_fw_external_subnet"
+  resource_group_name  = data.azurerm_resource_group.tf_lab.name
+  virtual_network_name = azurerm_virtual_network.security.name
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
 resource "azurerm_virtual_network" "spoke_1" {
   name                = "${var.network_name}_spoke_1_vnet"
   location            = data.azurerm_resource_group.tf_lab.location
@@ -24,6 +38,13 @@ resource "azurerm_virtual_network" "spoke_1" {
   }
 }
 
+resource "azurerm_subnet" "spoke_1" {
+  name                 = "${var.network_name}_spoke_1_subnet"
+  resource_group_name  = data.azurerm_resource_group.tf_lab.name
+  virtual_network_name = azurerm_virtual_network.spoke_1.name
+  address_prefixes     = ["10.1.0.0/24"]
+}
+
 resource "azurerm_virtual_network" "spoke_2" {
   name                = "${var.network_name}_spoke_2_vnet"
   location            = data.azurerm_resource_group.tf_lab.location
@@ -33,4 +54,11 @@ resource "azurerm_virtual_network" "spoke_2" {
   tags = {
     type = "spoke"
   }
+}
+
+resource "azurerm_subnet" "spoke_2" {
+  name                 = "${var.network_name}_spoke_2_subnet"
+  resource_group_name  = data.azurerm_resource_group.tf_lab.name
+  virtual_network_name = azurerm_virtual_network.spoke_2.name
+  address_prefixes     = ["10.2.0.0/24"]
 }
