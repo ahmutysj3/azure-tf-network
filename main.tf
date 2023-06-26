@@ -119,7 +119,7 @@ resource "azurerm_virtual_network_peering" "spoke_1_to_hub" {
   allow_forwarded_traffic = true
   allow_gateway_transit = false
   allow_virtual_network_access = true
-  use_remote_gateways = true
+  use_remote_gateways = false
   triggers = {
     remote_address_space = join(",", azurerm_virtual_network.security.address_space)
   }
